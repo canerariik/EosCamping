@@ -1,4 +1,3 @@
-// src/pages/Login.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -8,13 +7,23 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const login = useAuthStore(state => state.login);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    if (login(username, password)) {
-      navigate('/');
-    } else {
-      alert('Kullanıcı adı veya şifre yanlış!');
+    setLoading(true);
+    try {
+      const success = await login(username, password);
+      if (success) {
+        navigate('/'); // user set edildikten sonra yönlendir
+      } else {
+        alert('Kullanıcı adı veya şifre yanlış!');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Bir hata oluştu. Tekrar deneyin.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -44,14 +53,21 @@ export default function Login() {
           />
           <button
             type="submit"
-            className="w-full py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-lg rounded-xl hover:scale-105 transition"
+            disabled={loading}
+            className={`w-full py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-lg rounded-xl hover:scale-105 transition ${
+              loading ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
           >
-            Giriş Yap
+            {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
-        <div className="mt-6 text-center text-white/70 text-sm">
-          <p>admin / 123</p>
-          <p>resepsiyon / 123</p>
+        <div className="mt-6 text-center text-white/70 text-sm flex flex-col gap-2">
+          <button
+            onClick={() => navigate('/register')}
+            className="mt-4 underline text-white hover:text-emerald-300"
+          >
+            Yeni Kullanıcı Oluştur
+          </button>
         </div>
       </div>
     </div>

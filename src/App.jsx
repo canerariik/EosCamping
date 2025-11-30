@@ -1,32 +1,51 @@
-// src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from './store/authStore';
 
 // Pages
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import ReservationList from './pages/Reservations/ReservationList';
 import ReservationForm from './pages/Reservations/ReservationForm';
-import CustomerList from './pages/Customers/CustomerList';
-import CustomerForm from './pages/Customers/CustomerForm';
+// import CustomerList from './pages/Customers/CustomerList';
+// import CustomerForm from './pages/Customers/CustomerForm';
 import AccommodationList from './pages/Accommodations/AccommodationList';
 import UserList from './pages/Users/UserList';
 
 // Layout
 import Layout from './components/layout/Layout';
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
+const ProtectedRoute = ({ children }) => {
   const { user } = useAuthStore();
 
+  // user null ise login sayfasına yönlendir
   if (!user) return <Navigate to="/login" replace />;
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
-  }
+
   return children;
 };
 
 function App() {
   const { user } = useAuthStore();
+  const [hasUsers, setHasUsers] = useState(null); // null = loading
+
+  useEffect(() => {
+    const checkUsers = async () => {
+      if (!window.electronAPI) {
+        console.log('Electron API yok, web ortamında çalışıyorsun');
+        return;
+      }
+      const users = await window.electronAPI.usersList();
+      setHasUsers(users.length > 0);
+    };
+    checkUsers();
+  }, []);
+
+  if (hasUsers === null) {
+    return (
+      <div className="text-white text-2xl text-center mt-40">Yükleniyor...</div>
+    );
+  }
 
   return (
     <BrowserRouter>
@@ -36,6 +55,8 @@ function App() {
           path="/login"
           element={!user ? <Login /> : <Navigate to="/" replace />}
         />
+
+        <Route path="/register" element={<Register />} />
 
         {/* TÜM KORUMALI SAYFALAR (Layout içinde) */}
         <Route
@@ -48,81 +69,28 @@ function App() {
           {/* Ana Sayfa */}
           <Route path="/" element={<Dashboard />} />
 
-          {/* ==== REZERVASYONLAR (admin + resepsiyon) ==== */}
-          <Route
-            path="/reservations"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'resepsiyon']}>
-                <ReservationList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reservations/new"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'resepsiyon']}>
-                <ReservationForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reservations/edit/:id"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'resepsiyon']}>
-                <ReservationForm />
-              </ProtectedRoute>
-            }
-          />
+          {/* Rezervasyonlar */}
+          <Route path="/reservations" element={<ReservationList />} />
+          <Route path="/reservations/new" element={<ReservationForm />} />
+          <Route path="/reservations/edit/:id" element={<ReservationForm />} />
 
-          {/* ==== MÜŞTERİLER (sadece admin) ==== */}
-          <Route
-            path="/customers"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <CustomerList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/customers/new"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <CustomerForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/customers/edit/:id"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <CustomerForm />
-              </ProtectedRoute>
-            }
-          />
+          {/* Müşteriler
+          <Route path="/customers" element={<CustomerList />} />
+          <Route path="/customers/new" element={<CustomerForm />} />
+          <Route path="/customers/edit/:id" element={<CustomerForm />} /> */}
 
-          {/* ==== KONAKLAMA BİRİMLERİ (sadece admin) ==== */}
-          <Route
-            path="/accommodations"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <AccommodationList />
-              </ProtectedRoute>
-            }
-          />
+          {/* Konaklama Birimleri */}
+          <Route path="/accommodations" element={<AccommodationList />} />
 
-          {/* ==== PERSONEL (sadece admin) ==== */}
-          <Route
-            path="/users"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <UserList />
-              </ProtectedRoute>
-            }
-          />
+          {/* Personel */}
+          <Route path="/users" element={<UserList />} />
         </Route>
 
-        {/* YANLIŞ ADRES → Ana sayfaya yönlendir */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Yanlış adres → Ana sayfaya yönlendir */}
+        <Route
+          path="*"
+          element={<Navigate to={user ? '/' : '/login'} replace />}
+        />
       </Routes>
     </BrowserRouter>
   );

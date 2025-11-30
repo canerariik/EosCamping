@@ -1,4 +1,3 @@
-// src/pages/Reservations/ReservationForm.jsx (güncüllenmiş, Excel kolonlarına uyumlu)
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useReservationStore } from '../../store/reservationStore';
@@ -10,65 +9,89 @@ export default function ReservationForm() {
   const { reservations, add, update } = useReservationStore();
 
   const isEdit = !!id;
-  const existing = reservations.find(r => r.id === Number(id));
+  const existing = reservations.find(r => r.id === id);
 
   const [form, setForm] = useState({
-    kod: '',
     isim: '',
+    soyisim: '',
     telefon: '',
-    tcKimlik: '',
+    tcNo: '',
     plaka: '',
-    gun: '',
-    yetiskin: '',
-    cocuk: '',
-    cadir: '',
-    giris: '',
-    cikis: '',
-    bolge: '',
+    yetiskinSayisi: '',
+    cocukSayisi: '',
+    cadirSayisi: '',
+    girisTarihi: '',
+    cikisTarihi: '',
+    kampBolge: '',
     kapora: '',
-    nToplam: '',
-    kToplam: '',
-    öNakit: '',
-    öKart: '',
-    öHavale: '',
-    kalanOdeme: '',
-    not: '',
+    nakitUcret: '',
+    kartUcret: '',
+    odenenNakit: '',
+    odenenKart: '',
+    odenenHavale: '',
+    kalanNakitUcret: '',
+    kalanKartUcret: '',
+    aciklama: '',
   });
 
   useEffect(() => {
-    if (isEdit && existing) {
-      setForm(existing);
-    }
+    if (isEdit && existing) setForm(existing);
   }, [isEdit, existing]);
 
   const handleSubmit = async e => {
     e.preventDefault();
-    try {
-      const normalizedForm = {
-        ...form,
-        gun: Number(form.gun) || 0,
-        yetiskin: Number(form.yetiskin) || 0,
-        cocuk: Number(form.cocuk) || 0,
-        cadir: Number(form.cadir) || 0,
-        kapora: Number(form.kapora) || 0,
-        nToplam: Number(form.nToplam) || 0,
-        kToplam: Number(form.kToplam) || 0,
-        öNakit: Number(form.öNakit) || 0,
-        öKart: Number(form.öKart) || 0,
-        öHavale: Number(form.öHavale) || 0,
-        kalanOdeme: Number(form.kalanOdeme) || 0,
-      };
 
-      if (isEdit) {
-        await update({ ...normalizedForm, id: Number(id) });
-      } else {
-        await add(normalizedForm);
-      }
+    // Number normalize
+    const yetiskinSayisi = Number(form.yetiskinSayisi) || 0;
+    const cocukSayisi = Number(form.cocukSayisi) || 0;
+    const kapora = Number(form.kapora) || 0;
 
-      navigate('/reservations');
-    } catch (err) {
-      console.error('Rezervasyon kaydetme hatası:', err);
-    }
+    const odenenNakit = Number(form.odenenNakit) || 0;
+    const odenenKart = Number(form.odenenKart) || 0;
+    const odenenHavale = Number(form.odenenHavale) || 0;
+
+    // Gün hesaplama
+    const diff =
+      (new Date(form.cikisTarihi) - new Date(form.girisTarihi)) /
+      (1000 * 60 * 60 * 24);
+
+    const gunSayisi = Math.max(1, Math.round(diff)); // minimum 1 gün
+
+    // Ücret hesaplama
+    const nakitUcret =
+      gunSayisi * (yetiskinSayisi * 1000 + cocukSayisi * 650) - kapora;
+
+    const kartUcret = Number((nakitUcret * 1.1).toFixed(2));
+
+    // Kalan hesaplama
+    const kalanNakitUcret = Number(
+      Math.max(0, nakitUcret - (odenenNakit + odenenHavale)).toFixed(2)
+    );
+
+    const kalanKartUcret = Number(
+      Math.max(0, kartUcret - odenenKart).toFixed(2)
+    );
+
+    const payload = {
+      ...form,
+      yetiskinSayisi,
+      cocukSayisi,
+      cadirSayisi: Number(form.cadirSayisi) || 0,
+      gunSayisi,
+      kapora,
+      nakitUcret: Number(nakitUcret.toFixed(2)),
+      kartUcret,
+      odenenNakit,
+      odenenKart,
+      odenenHavale,
+      kalanNakitUcret,
+      kalanKartUcret,
+    };
+
+    if (isEdit) await update({ ...payload, id });
+    else await add(payload);
+
+    navigate('/reservations');
   };
 
   return (
@@ -91,13 +114,6 @@ export default function ReservationForm() {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <input
-            placeholder="KOD *"
-            value={form.kod}
-            onChange={e => setForm({ ...form, kod: e.target.value })}
-            required
-            className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
-          />
-          <input
             placeholder="İSİM *"
             value={form.isim}
             onChange={e => setForm({ ...form, isim: e.target.value })}
@@ -105,16 +121,21 @@ export default function ReservationForm() {
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
-            placeholder="TELEFON *"
+            placeholder="SOYİSİM"
+            value={form.soyisim}
+            onChange={e => setForm({ ...form, soyisim: e.target.value })}
+            className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
+          />
+          <input
+            placeholder="TELEFON"
             value={form.telefon}
             onChange={e => setForm({ ...form, telefon: e.target.value })}
-            required
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
             placeholder="TCKİMLİKNO"
-            value={form.tcKimlik}
-            onChange={e => setForm({ ...form, tcKimlik: e.target.value })}
+            value={form.tcNo}
+            onChange={e => setForm({ ...form, tcNo: e.target.value })}
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
@@ -124,158 +145,83 @@ export default function ReservationForm() {
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
-            placeholder="GÜN *"
-            value={form.gun}
-            onChange={e =>
-              setForm({
-                ...form,
-                gun: e.target.value === '' ? '' : Number(e.target.value),
-              })
-            }
-            required
+            type="number"
+            placeholder="YETİŞKİN"
+            value={form.yetiskinSayisi}
+            onChange={e => setForm({ ...form, yetiskinSayisi: e.target.value })}
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
-            placeholder="YETİŞKİN *"
-            value={form.yetiskin}
-            onChange={e =>
-              setForm({
-                ...form,
-                yetiskin: e.target.value === '' ? '' : Number(e.target.value),
-              })
-            }
-            required
-            className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
-          />
-          <input
+            type="number"
             placeholder="ÇOCUK"
-            value={form.cocuk}
-            onChange={e =>
-              setForm({
-                ...form,
-                cocuk: e.target.value === '' ? '' : Number(e.target.value),
-              })
-            }
+            value={form.cocukSayisi}
+            onChange={e => setForm({ ...form, cocukSayisi: e.target.value })}
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
+            type="number"
             placeholder="ÇADIR"
-            value={form.cadir}
-            onChange={e =>
-              setForm({
-                ...form,
-                cadir: e.target.value === '' ? '' : Number(e.target.value),
-              })
-            }
+            value={form.cadirSayisi}
+            onChange={e => setForm({ ...form, cadirSayisi: e.target.value })}
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
             type="date"
-            placeholder="GİRİŞ *"
-            value={form.giris}
-            onChange={e => setForm({ ...form, giris: e.target.value })}
-            required
+            placeholder="GİRİŞ TARİHİ"
+            value={form.girisTarihi}
+            min={new Date().toISOString().split('T')[0]}
+            onChange={e => setForm({ ...form, girisTarihi: e.target.value })}
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
             type="date"
-            placeholder="ÇIKIŞ *"
-            value={form.cikis}
-            onChange={e => setForm({ ...form, cikis: e.target.value })}
-            required
+            placeholder="ÇIKIŞ TARİHİ"
+            value={form.cikisTarihi}
+            min={new Date().toISOString().split('T')[0]}
+            onChange={e => setForm({ ...form, cikisTarihi: e.target.value })}
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
             placeholder="BÖLGE"
-            value={form.bolge}
-            onChange={e => setForm({ ...form, bolge: e.target.value })}
+            value={form.kampBolge}
+            onChange={e => setForm({ ...form, kampBolge: e.target.value })}
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
+            type="number"
             placeholder="KAPORA"
             value={form.kapora}
-            onChange={e =>
-              setForm({
-                ...form,
-                kapora: e.target.value === '' ? '' : Number(e.target.value),
-              })
-            }
+            onChange={e => setForm({ ...form, kapora: e.target.value })}
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
-            placeholder="N-TOPLAM"
-            value={form.nToplam}
-            onChange={e =>
-              setForm({
-                ...form,
-                nToplam: e.target.value === '' ? '' : Number(e.target.value),
-              })
-            }
+            type="number"
+            placeholder="ÖDENEN NAKİT"
+            value={form.odenenNakit}
+            onChange={e => setForm({ ...form, odenenNakit: e.target.value })}
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
-            placeholder="K-TOPLAM"
-            value={form.kToplam}
-            onChange={e =>
-              setForm({
-                ...form,
-                kToplam: e.target.value === '' ? '' : Number(e.target.value),
-              })
-            }
+            type="number"
+            placeholder="ÖDENEN KART"
+            value={form.odenenKart}
+            onChange={e => setForm({ ...form, odenenKart: e.target.value })}
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
           <input
-            placeholder="Ö-NAKİT"
-            value={form.öNakit}
-            onChange={e =>
-              setForm({
-                ...form,
-                öNakit: e.target.value === '' ? '' : Number(e.target.value),
-              })
-            }
-            className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
-          />
-          <input
-            placeholder="Ö-KART"
-            value={form.öKart}
-            onChange={e =>
-              setForm({
-                ...form,
-                öKart: e.target.value === '' ? '' : Number(e.target.value),
-              })
-            }
-            className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
-          />
-          <input
-            placeholder="Ö-HAVALE"
-            value={form.öHavale}
-            onChange={e =>
-              setForm({
-                ...form,
-                öHavale: e.target.value === '' ? '' : Number(e.target.value),
-              })
-            }
-            className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
-          />
-          <input
-            placeholder="KALAN ÖDEME"
-            value={form.kalanOdeme}
-            onChange={e =>
-              setForm({
-                ...form,
-                kalanOdeme: e.target.value === '' ? '' : Number(e.target.value),
-              })
-            }
+            type="number"
+            placeholder="ÖDENEN HAVALE"
+            value={form.odenenHavale}
+            onChange={e => setForm({ ...form, odenenHavale: e.target.value })}
             className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
           />
         </div>
-
         <textarea
-          placeholder="NOT (isteğe bağlı)"
-          value={form.not}
-          onChange={e => setForm({ ...form, not: e.target.value })}
+          placeholder="AÇIKLAMA"
+          value={form.aciklama}
+          onChange={e => setForm({ ...form, aciklama: e.target.value })}
           rows="4"
-          className="w-full px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none resize-none"
+          className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
         ></textarea>
 
         <div className="flex gap-4">
@@ -294,6 +240,21 @@ export default function ReservationForm() {
           </button>
         </div>
       </form>
+      <style>
+        <style>
+          {`
+            input[type='date']::-webkit-calendar-picker-indicator {
+              filter: invert(1) brightness(2);
+            }
+
+            input[type='number']::-webkit-inner-spin-button,
+            input[type='number']::-webkit-outer-spin-button {
+              -webkit-appearance: none;
+              margin: 0;
+            }
+          `}
+        </style>
+      </style>
     </div>
   );
 }

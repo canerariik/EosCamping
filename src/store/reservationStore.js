@@ -1,109 +1,47 @@
-import { create } from 'zustand';
+// src/store/reservationStore.js
+import { create } from "zustand";
+import { useAuthStore } from "./authStore";
 
 export const useReservationStore = create((set, get) => ({
     reservations: [],
     loading: true,
-
-    // Sayısal alanları normalize et
-    normalizeNumbers: (res) => ({
-        ...res,
-        gun: Number(res.gun) || 0,
-        yetiskin: Number(res.yetiskin) || 0,
-        cocuk: Number(res.cocuk) || 0,
-        cadir: Number(res.cadir) || 0,
-        kapora: Number(res.kapora) || 0,
-        nToplam: Number(res.nToplam) || 0,
-        kToplam: Number(res.kToplam) || 0,
-        öNakit: Number(res.öNakit) || 0,
-        öKart: Number(res.öKart) || 0,
-        öHavale: Number(res.öHavale) || 0,
-        kalanOdeme: Number(res.kalanOdeme) || 0
-    }),
+    currentUserId: null,
 
     init: async () => {
         set({ loading: true });
-        try {
-            const reservations = window.electronAPI
-                ? await window.electronAPI.readExcel()
-                : [];
-            set({ reservations, loading: false });
-        } catch (err) {
-            console.error('Excel okuma hatası:', err);
-            set({ loading: false });
-        }
+        const data = await window.electronAPI.reservationsGet();
+        set({ reservations: data, loading: false });
+
+        const user = useAuthStore.getState().user;
+        if (user) set({ currentUserId: user.id });
     },
 
+    setCurrentUser: (id) => set({ currentUserId: id }),
+
     add: async (res) => {
-        try {
-            const reservations = window.electronAPI
-                ? await window.electronAPI.readExcel()
-                : [];
+        const userId = get().currentUserId;
+        if (!userId) throw new Error("User not logged in");
+        res.userId = userId;
 
-            const generateUT = () => {
-                const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                let code;
-                do {
-                    code = '';
-                    for (let i = 0; i < 3; i++) {
-                        code += letters[Math.floor(Math.random() * letters.length)];
-                    }
-                } while (reservations.some(r => r.ut === code));
-                return code;
-            };
-
-            const newRes = get().normalizeNumbers({
-                ...res,
-                id: reservations.length,
-                ut: generateUT()
-            });
-
-            const updatedReservations = [...reservations, newRes];
-
-            if (window.electronAPI) {
-                await window.electronAPI.writeExcel({ reservations: updatedReservations });
-            }
-
-            set({ reservations: updatedReservations });
-        } catch (err) {
-            console.error('Excel yazma hatası:', err);
-        }
+        const newRes = await window.electronAPI.reservationsAdd(res);
+        set({ reservations: [...get().reservations, newRes] });
     },
 
     update: async (res) => {
-        try {
-            const reservations = window.electronAPI
-                ? await window.electronAPI.readExcel()
-                : [];
+        const userId = get().currentUserId;
+        if (!userId) throw new Error("User not logged in");
 
-            const updatedReservations = reservations.map(r =>
-                r.id === res.id ? get().normalizeNumbers(res) : r
-            );
-
-            if (window.electronAPI) {
-                await window.electronAPI.writeExcel({ reservations: updatedReservations });
-            }
-
-            set({ reservations: updatedReservations });
-        } catch (err) {
-            console.error('Excel güncelleme hatası:', err);
-        }
+        await window.electronAPI.reservationsUpdate(res.id, res, userId);
+        set({
+            reservations: get().reservations.map(r => (r.id === res.id ? res : r))
+        });
     },
 
     remove: async (id) => {
-        try {
-            const reservations = window.electronAPI
-                ? await window.electronAPI.readExcel()
-                : [];
+        const userId = get().currentUserId;
+        if (!userId) throw new Error("User not logged in");
 
-            const updatedReservations = reservations.filter(r => r.id !== id);
-
-            if (window.electronAPI) {
-                await window.electronAPI.writeExcel({ reservations: updatedReservations });
-            }
-
-            set({ reservations: updatedReservations });
-        } catch (err) {
-            console.error('Excel silme hatası:', err);
-        }
+        await window.electronAPI.reservationsDelete(id, userId);
+        set({ reservations: get().reservations.filter(r => r.id !== id) });
     }
 }));
