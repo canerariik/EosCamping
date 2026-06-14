@@ -1,0 +1,7 @@
+dist-electron/
+dist/
+out/
+build/
+*.exe
+*.asar
+node_modules/
