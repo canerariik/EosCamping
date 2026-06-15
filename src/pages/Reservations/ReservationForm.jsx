@@ -39,8 +39,6 @@ export default function ReservationForm() {
     nakitUcret: '',
     kartUcret: '',
     odenenNakit: '',
-    odenenKart: '',
-    odenenHavale: '',
     kalanNakitUcret: '',
     kalanKartUcret: '',
     aciklama: '',
@@ -57,8 +55,6 @@ export default function ReservationForm() {
         cadirSayisi: String(existing.cadirSayisi || ''),
         kapora: String(existing.kapora || ''),
         odenenNakit: String(existing.odenenNakit || ''),
-        odenenKart: String(existing.odenenKart || ''),
-        odenenHavale: String(existing.odenenHavale || ''),
       });
     } else {
       setForm({
@@ -77,8 +73,6 @@ export default function ReservationForm() {
         nakitUcret: '',
         kartUcret: '',
         odenenNakit: '',
-        odenenKart: '',
-        odenenHavale: '',
         kalanNakitUcret: '',
         kalanKartUcret: '',
         aciklama: '',
@@ -93,10 +87,6 @@ export default function ReservationForm() {
   const kapora = Number(form.kapora) || 0;
 
   const odenenNakit = Number(form.odenenNakit) || 0;
-
-  const odenenKart = Number(form.odenenKart) || 0;
-
-  const odenenHavale = Number(form.odenenHavale) || 0;
 
   const diff =
     (new Date(form.cikisTarihi) - new Date(form.girisTarihi)) /
@@ -120,13 +110,13 @@ export default function ReservationForm() {
   const nakitUcret =
     Number(
       gunSayisi * (yetiskinSayisi * yetiskinFiyat + cocukSayisi * cocukFiyat) -
-        kapora,
+        kapora -
+        odenenNakit,
     ) || 0;
-
   const kartUcret = Number((nakitUcret * 1.1).toFixed(2) || 0);
 
   const kalanNakitUcret = Number(
-    Math.max(0, nakitUcret - (odenenNakit + odenenHavale)).toFixed(2),
+    Math.max(0, nakitUcret - odenenNakit).toFixed(2),
   );
 
   const kalanKartUcret = Number(
@@ -216,8 +206,6 @@ export default function ReservationForm() {
       nakitUcret: Number(nakitUcret.toFixed(2)),
       kartUcret,
       odenenNakit,
-      odenenKart,
-      odenenHavale,
       kalanNakitUcret,
       kalanKartUcret,
       gunuBirlikMi: false,
@@ -472,6 +460,23 @@ export default function ReservationForm() {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm text-slate-300 font-bold text-white">
+              AÇIKLAMA
+            </label>
+            <textarea
+              value={form.aciklama}
+              onChange={e =>
+                setForm(prev => ({
+                  ...prev,
+                  aciklama: e.target.value,
+                }))
+              }
+              disabled={isEdit && !canEditGeneral}
+              className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-slate-300 font-bold text-white">
               KAPORA
             </label>
             <input
@@ -490,7 +495,7 @@ export default function ReservationForm() {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm text-slate-300 font-bold text-white">
-              ÖDENEN NAKİT
+              ÖDENEN GÜNCEL TUTAR
             </label>
             <input
               type="number"
@@ -502,59 +507,6 @@ export default function ReservationForm() {
                 }))
               }
               disabled={isEdit && !canEditPrice}
-              className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-sm text-slate-300 font-bold text-white">
-              ÖDENEN KART
-            </label>
-            <input
-              type="number"
-              value={form.odenenKart}
-              onChange={e =>
-                setForm(prev => ({
-                  ...prev,
-                  odenenKart: e.target.value,
-                }))
-              }
-              disabled={isEdit && !canEditPrice}
-              className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-sm text-slate-300 font-bold text-white">
-              ÖDENEN HAVALE
-            </label>
-            <input
-              type="number"
-              value={form.odenenHavale}
-              onChange={e =>
-                setForm(prev => ({
-                  ...prev,
-                  odenenHavale: e.target.value,
-                }))
-              }
-              disabled={isEdit && !canEditPrice}
-              className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-sm text-slate-300 font-bold text-white">
-              AÇIKLAMA
-            </label>
-            <textarea
-              value={form.aciklama}
-              onChange={e =>
-                setForm(prev => ({
-                  ...prev,
-                  aciklama: e.target.value,
-                }))
-              }
-              disabled={isEdit && !canEditGeneral}
               className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
             />
           </div>

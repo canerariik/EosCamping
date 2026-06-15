@@ -1,7 +1,14 @@
 import { useAuthStore } from '../store/authStore';
 import { useReservationStore } from '../store/reservationStore';
 import { useSettingStore } from '../store/settingStore';
-import { Tent, Calendar, Users, TrendingUp } from 'lucide-react';
+import {
+  Tent,
+  Calendar,
+  Users,
+  TrendingUp,
+  Banknote,
+  CreditCard,
+} from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuthStore();
@@ -10,68 +17,78 @@ export default function Dashboard() {
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  const activeReservations = reservations.filter((r) => {
+  const activeReservations = reservations.filter(r => {
     const giris = r.girisTarihi;
     const cikis = r.cikisTarihi;
 
-    return (
-      r.gunuBirlikMi !== true &&
-      todayStr >= giris &&
-      todayStr <= cikis
-    );
+    return r.gunuBirlikMi !== true && todayStr >= giris && todayStr <= cikis;
   });
 
   const totalTentCount = activeReservations.reduce(
     (sum, r) => sum + Number(r.cadirSayisi || 0),
-    0
+    0,
   );
 
-  const getSetting = (key) => {
-    return Number(
-      settings.find((s) => s.ozellik === key)?.deger || 0
-    );
+  const getSetting = key => {
+    return Number(settings.find(s => s.ozellik === key)?.deger || 0);
   };
 
-  const maxTentCapacity = getSetting("cadir_Sayisi");
+  const maxTentCapacity = getSetting('cadir_Sayisi');
 
   const occupancyRate =
     maxTentCapacity > 0
-      ? Math.round(
-          (totalTentCount / maxTentCapacity) * 100
-        )
+      ? Math.round((totalTentCount / maxTentCapacity) * 100)
       : 0;
 
   const totalGuests = activeReservations.reduce(
     (sum, r) =>
-      sum +
-      Number(r.yetiskinSayisi || 0) +
-      Number(r.cocukSayisi || 0),
-    0
+      sum + Number(r.yetiskinSayisi || 0) + Number(r.cocukSayisi || 0),
+    0,
   );
 
-  const activeDailyReservations = reservations.filter(
-    (r) => {
-      return (
-        r.gunuBirlikMi === true &&
-        r.girisTarihi === todayStr
-      );
-    }
+  const activeDailyReservations = reservations.filter(r => {
+    return r.gunuBirlikMi === true && r.girisTarihi === todayStr;
+  });
+
+  const totalDailyGuests = activeDailyReservations.reduce(
+    (sum, r) =>
+      sum + Number(r.yetiskinSayisi || 0) + Number(r.cocukSayisi || 0),
+    0,
   );
 
-  const totalDailyGuests =
-    activeDailyReservations.reduce(
-      (sum, r) =>
-        sum +
-        Number(r.yetiskinSayisi || 0) +
-        Number(r.cocukSayisi || 0),
-      0
-    );
+  // Bugün kampa giriş yapan tüm rezervasyonlar (konaklamalı + günü birlik)
+  const todayCheckIns = reservations.filter(r => r.girisTarihi === todayStr);
+
+  const todayCashTotal = todayCheckIns.reduce(
+    (sum, r) => sum + Number(r.odenenNakit || 0),
+    0,
+  );
+
+  const todayCardTotal = todayCheckIns.reduce(
+    (sum, r) => sum + Number(r.odenenKart || 0),
+    0,
+  );
+
+  const todayTransferTotal = todayCheckIns.reduce(
+    (sum, r) => sum + Number(r.odenenHavale || 0),
+    0,
+  );
+
+  const todayKaporaTotal = todayCheckIns.reduce(
+    (sum, r) => sum + Number(r.kapora || 0),
+    0,
+  );
+
+  const todayGrandTotal =
+    todayCashTotal + todayCardTotal + todayTransferTotal + todayKaporaTotal;
+
+  const formatTL = n => `₺${Number(n).toLocaleString('tr-TR')}`;
 
   return (
     <div className="space-y-8">
       <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-8 border border-slate-800 text-center">
         <h1 className="text-4xl font-bold text-white mb-2">
-          Hoşgeldin {user?.isim?.split(" ")[0]?.toUpperCase()}!
+          Hoşgeldin {user?.isim?.split(' ')[0]?.toUpperCase()}!
         </h1>
 
         <p className="text-slate-400">
@@ -90,27 +107,27 @@ export default function Dashboard() {
           {[
             {
               icon: Tent,
-              label: "Doluluk",
+              label: 'Doluluk',
               value: `%${occupancyRate}`,
-              color: "emerald",
+              color: 'emerald',
             },
             {
               icon: Calendar,
-              label: "Rezervasyon",
+              label: 'Rezervasyon',
               value: activeReservations.length,
-              color: "blue",
+              color: 'blue',
             },
             {
               icon: Users,
-              label: "Misafir",
+              label: 'Misafir',
               value: totalGuests,
-              color: "purple",
+              color: 'purple',
             },
             {
               icon: TrendingUp,
-              label: "Aktif Çadır",
+              label: 'Aktif Çadır',
               value: totalTentCount,
-              color: "yellow",
+              color: 'yellow',
             },
           ].map((stat, i) => (
             <div
@@ -142,15 +159,15 @@ export default function Dashboard() {
           {[
             {
               icon: Calendar,
-              label: "Rezervasyon",
+              label: 'Rezervasyon',
               value: activeDailyReservations.length,
-              color: "blue",
+              color: 'blue',
             },
             {
               icon: Users,
-              label: "Misafir",
+              label: 'Misafir',
               value: totalDailyGuests,
-              color: "purple",
+              color: 'purple',
             },
           ].map((stat, i) => (
             <div
@@ -162,6 +179,70 @@ export default function Dashboard() {
                   <p className="text-slate-400">{stat.label}</p>
 
                   <p className="text-4xl font-bold mt-2">{stat.value}</p>
+                </div>
+
+                <stat.icon className={`w-12 h-12 text-${stat.color}-400`} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Bugünkü Hasılat</h2>
+
+          <p className="text-slate-400">
+            Bugün kampa giriş yapan misafirlerin ödeme bilgileri (
+            {todayCheckIns.length} rezervasyon)
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          {[
+            {
+              icon: Banknote,
+              label: 'Nakit',
+              value: formatTL(todayCashTotal),
+              color: 'emerald',
+            },
+            {
+              icon: CreditCard,
+              label: 'Kredi Kartı',
+              value: formatTL(todayCardTotal),
+              color: 'blue',
+            },
+            {
+              icon: TrendingUp,
+              label: 'Havale',
+              value: formatTL(todayTransferTotal),
+              color: 'purple',
+            },
+            {
+              icon: TrendingUp,
+              label: 'Kapora',
+              value: formatTL(todayKaporaTotal),
+              color: 'amber',
+            },
+            {
+              icon: TrendingUp,
+              label: 'Toplam',
+              value: formatTL(todayGrandTotal),
+              color: 'yellow',
+            },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              data-testid={`today-revenue-${stat.label.toLowerCase().replace(/\s/g, '-')}`}
+              className={`bg-gradient-to-br from-${stat.color}-500/20 to-${stat.color}-600/20 border border-${stat.color}-500/30 rounded-2xl p-6 backdrop-blur-xl`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400">{stat.label}</p>
+
+                  <p className="text-3xl font-bold mt-2 text-white">
+                    {stat.value}
+                  </p>
                 </div>
 
                 <stat.icon className={`w-12 h-12 text-${stat.color}-400`} />

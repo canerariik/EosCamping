@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useLayoutEffect } from 'react';
 import { useReservationStore } from '../../store/reservationStore';
 import { useAuthStore } from '../../store/authStore';
 import { format } from 'date-fns';
@@ -36,9 +36,49 @@ export default function ReservationList() {
     end: '',
   });
 
+  const topScrollRef = useRef(null);
+  const bottomScrollRef = useRef(null);
+  const tableRef = useRef(null);
+  const [tableWidth, setTableWidth] = useState(0);
+  const syncingRef = useRef(false);
+
   useEffect(() => {
     init();
   }, []);
+
+  useLayoutEffect(() => {
+    const updateWidth = () => {
+      if (tableRef.current) {
+        setTableWidth(tableRef.current.scrollWidth);
+      }
+    };
+
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  });
+
+  const handleTopScroll = () => {
+    if (syncingRef.current) {
+      syncingRef.current = false;
+      return;
+    }
+    if (bottomScrollRef.current && topScrollRef.current) {
+      syncingRef.current = true;
+      bottomScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    }
+  };
+
+  const handleBottomScroll = () => {
+    if (syncingRef.current) {
+      syncingRef.current = false;
+      return;
+    }
+    if (topScrollRef.current && bottomScrollRef.current) {
+      syncingRef.current = true;
+      topScrollRef.current.scrollLeft = bottomScrollRef.current.scrollLeft;
+    }
+  };
 
   const getStatus = (giris, cikis) => {
     const now = new Date();
@@ -196,15 +236,13 @@ export default function ReservationList() {
       { header: 'ÇIKIŞ', key: 'cikis', width: 15 },
       { header: 'GÜN', key: 'gun', width: 10 },
       { header: 'BÖLGE', key: 'bolge', width: 15 },
+      { header: 'AÇIKLAMA', key: 'aciklama', width: 15 },
       { header: 'KAPORA', key: 'kapora', width: 15 },
-      { header: 'NAKİT', key: 'nakit', width: 15 },
-      { header: 'KART', key: 'kart', width: 15 },
-      { header: 'ÖDENEN NAKİT', key: 'odenennakit', width: 18 },
-      { header: 'ÖDENEN KART', key: 'odenenkart', width: 18 },
-      { header: 'ÖDENEN HAVALE', key: 'odenenhavale', width: 18 },
-      { header: 'KALAN NAKİT', key: 'kalannakit', width: 18 },
-      { header: 'KALAN KART', key: 'kalankart', width: 18 },
-      { header: 'AÇIKLAMA', key: 'aciklama', width: 25 },
+      { header: 'NAKİT TUTAR', key: 'nakit', width: 15 },
+      { header: 'KART TUTAR', key: 'kart', width: 15 },
+      { header: 'ÖDENEN GÜNCEL TUTAR', key: 'odenennakit', width: 15 },
+      { header: 'KALAN NAKİT', key: 'kalannakit', width: 15 },
+      { header: 'KALAN KART', key: 'kalankart', width: 15 },
     ];
 
     sheet.getRow(1).eachCell(cell => {
@@ -240,15 +278,13 @@ export default function ReservationList() {
         cikis: format(new Date(res.cikisTarihi), 'dd.MM.yyyy'),
         gun: res.gunSayisi,
         bolge: res.kampBolge,
+        aciklama: res.aciklama,
         kapora: res.kapora,
         nakit: res.nakitUcret,
         kart: res.kartUcret,
         odenennakit: res.odenenNakit,
-        odenenkart: res.odenenKart,
-        odenenhavale: res.odenenHavale,
         kalannakit: res.kalanNakitUcret,
         kalankart: res.kalanKartUcret,
-        aciklama: res.aciklama,
       });
 
       let color = 'FFFFFFFF';
@@ -423,158 +459,188 @@ export default function ReservationList() {
         }
       />
 
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-x-auto">
-        <table className="min-w-[1500px] w-full">
-          <thead className="bg-slate-800/50">
-            <tr>
-              {[
-                'Durum',
-                'KOD',
-                'İSİM',
-                'SOYİSİM',
-                'TELEFON',
-                'TC',
-                'PLAKA',
-                'YETİŞKİN',
-                'ÇOCUK',
-                'ÇADIR',
-                'GİRİŞ',
-                'ÇIKIŞ',
-                'GÜN',
-                'BÖLGE',
-                'KAPORA',
-                'NAKİT',
-                'KART',
-                'ÖDENEN NAKİT',
-                'ÖDENEN KART',
-                'ÖDENEN HAVALE',
-                'KALAN NAKİT',
-                'KALAN KART',
-                'AÇIKLAMA',
-              ].map((h, i) => (
-                <th key={i} className="p-6 text-center align-middle text-white">
-                  {h}
-                </th>
-              ))}
+      <div className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden">
+        <div
+          ref={topScrollRef}
+          onScroll={handleTopScroll}
+          data-testid="reservation-table-top-scroll"
+          className="overflow-x-auto"
+        >
+          <div style={{ width: tableWidth, height: 1 }} />
+        </div>
 
-              {!isPersonel && (
-                <th className="p-6 text-center text-white">İşlem</th>
-              )}
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredReservations.length === 0 ? (
+        <div
+          ref={bottomScrollRef}
+          onScroll={handleBottomScroll}
+          className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-320px)]"
+        >
+          <table ref={tableRef} className="min-w-[1500px] w-full">
+            <thead className="bg-slate-800 sticky top-0 z-10">
               <tr>
-                <td colSpan="25" className="text-center py-12 text-slate-500">
-                  Bu sekmede veri yok
-                </td>
-              </tr>
-            ) : (
-              paginatedData.map(res => {
-                const status = getDisplayStatus(res);
-
-                return (
-                  <tr
-                    key={res.id}
-                    className="border-t border-slate-800 hover:bg-slate-800/30"
+                {[
+                  'Durum',
+                  'KOD',
+                  'İSİM',
+                  'SOYİSİM',
+                  'TELEFON',
+                  'TC',
+                  'PLAKA',
+                  'YETİŞKİN',
+                  'ÇOCUK',
+                  'ÇADIR',
+                  'GİRİŞ',
+                  'ÇIKIŞ',
+                  'GÜN',
+                  'BÖLGE',
+                  'AÇIKLAMA',
+                  'KAPORA',
+                  'NAKİT',
+                  'KART',
+                  'KALAN NAKİT',
+                  'KALAN KART',
+                ].map((h, i) => (
+                  <th
+                    key={i}
+                    className="p-6 text-center align-middle text-white"
                   >
-                    <td className="p-6 text-center align-middle">
-                      <span
-                        className={`inline-flex items-center justify-center px-4 py-2 rounded-full text-sm whitespace-nowrap min-w-[120px] ${status.color}`}
-                      >
-                        {status.text}
-                      </span>
-                    </td>
+                    {h}
+                  </th>
+                ))}
 
-                    <td className="p-6 text-center align-middle">{res.kod}</td>
-                    <td className="p-6 text-center align-middle">{res.isim}</td>
-                    <td className="p-6 text-center align-middle">
-                      {res.soyisim}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      {res.telefon}
-                    </td>
-                    <td className="p-6 text-center align-middle">{res.tcNo}</td>
-                    <td className="p-6 text-center align-middle">
-                      {res.plaka}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      {res.yetiskinSayisi}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      {res.cocukSayisi}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      {res.cadirSayisi}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      {format(new Date(res.girisTarihi), 'dd.MM.yyyy')}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      {format(new Date(res.cikisTarihi), 'dd.MM.yyyy')}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      {res.gunSayisi}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      {res.kampBolge}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      ₺{res.kapora}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      ₺{res.nakitUcret}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      ₺{res.kartUcret}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      ₺{res.odenenNakit}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      ₺{res.odenenKart}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      ₺{res.odenenHavale}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      ₺{res.kalanNakitUcret}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      ₺{res.kalanKartUcret}
-                    </td>
-                    <td className="p-6 text-center align-middle">
-                      {res.aciklama}
-                    </td>
+                {!isPersonel && (
+                  <th className="p-6 text-center text-white">İşlem</th>
+                )}
+              </tr>
+            </thead>
 
-                    {!isPersonel && (
+            <tbody>
+              {filteredReservations.length === 0 ? (
+                <tr>
+                  <td colSpan="25" className="text-center py-12 text-slate-500">
+                    Bu sekmede veri yok
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map(res => {
+                  const status = getDisplayStatus(res);
+
+                  return (
+                    <tr
+                      key={res.id}
+                      className="border-t border-slate-800 hover:bg-slate-800/30"
+                    >
                       <td className="p-6 text-center align-middle">
-                        <div className="flex gap-2 justify-center">
-                          <Link
-                            to={`/reservations/edit/${res.id}`}
-                            className="p-2 bg-blue-600/30 rounded-lg"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Link>
-
-                          {!isResepsiyon && (
-                            <button
-                              onClick={() => setConfirmDelete(res)}
-                              className="p-2 bg-red-600/30 rounded-lg"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
+                        <span
+                          className={`inline-flex items-center justify-center px-4 py-2 rounded-full text-sm whitespace-nowrap min-w-[120px] ${status.color}`}
+                        >
+                          {status.text}
+                        </span>
                       </td>
-                    )}
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.kod}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.isim}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.soyisim}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.telefon}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.tcNo}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.plaka}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.yetiskinSayisi}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.cocukSayisi}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.cadirSayisi}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {format(new Date(res.girisTarihi), 'dd.MM.yyyy')}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {format(new Date(res.cikisTarihi), 'dd.MM.yyyy')}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.gunSayisi}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.kampBolge}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        {res.aciklama}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        ₺{res.kapora}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        ₺{res.nakitUcret}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        ₺{res.kartUcret}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        ₺{res.kalanNakitUcret}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        ₺{res.kalanKartUcret}
+                      </td>
+
+                      {!isPersonel && (
+                        <td className="p-6 text-center align-middle">
+                          <div className="flex gap-2 justify-center">
+                            <Link
+                              to={`/reservations/edit/${res.id}`}
+                              className="p-2 bg-blue-600/30 rounded-lg"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Link>
+
+                            {!isResepsiyon && (
+                              <button
+                                onClick={() => setConfirmDelete(res)}
+                                className="p-2 bg-red-600/30 rounded-lg"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <Pagination
