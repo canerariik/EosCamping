@@ -56,21 +56,10 @@ export default function Dashboard() {
     0,
   );
 
-  // Bugün kampa giriş yapan tüm rezervasyonlar (konaklamalı + günü birlik)
   const todayCheckIns = reservations.filter(r => r.girisTarihi === todayStr);
 
   const todayCashTotal = todayCheckIns.reduce(
     (sum, r) => sum + Number(r.odenenNakit || 0),
-    0,
-  );
-
-  const todayCardTotal = todayCheckIns.reduce(
-    (sum, r) => sum + Number(r.odenenKart || 0),
-    0,
-  );
-
-  const todayTransferTotal = todayCheckIns.reduce(
-    (sum, r) => sum + Number(r.odenenHavale || 0),
     0,
   );
 
@@ -79,8 +68,7 @@ export default function Dashboard() {
     0,
   );
 
-  const todayGrandTotal =
-    todayCashTotal + todayCardTotal + todayTransferTotal + todayKaporaTotal;
+  const todayGrandTotal = todayCashTotal + todayKaporaTotal;
 
   const formatTL = n => `₺${Number(n).toLocaleString('tr-TR')}`;
 
@@ -201,32 +189,20 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {[
             {
-              icon: Banknote,
-              label: 'Nakit',
-              value: formatTL(todayCashTotal),
-              color: 'emerald',
-            },
-            {
-              icon: CreditCard,
-              label: 'Kredi Kartı',
-              value: formatTL(todayCardTotal),
-              color: 'blue',
-            },
-            {
-              icon: TrendingUp,
-              label: 'Havale',
-              value: formatTL(todayTransferTotal),
-              color: 'purple',
-            },
-            {
               icon: TrendingUp,
               label: 'Kapora',
               value: formatTL(todayKaporaTotal),
               color: 'amber',
             },
             {
+              icon: Banknote,
+              label: 'Bakiye',
+              value: formatTL(todayCashTotal),
+              color: 'emerald',
+            },
+            {
               icon: TrendingUp,
-              label: 'Toplam',
+              label: 'Güncel Toplam',
               value: formatTL(todayGrandTotal),
               color: 'yellow',
             },
