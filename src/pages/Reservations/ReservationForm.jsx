@@ -110,17 +110,17 @@ export default function ReservationForm() {
   const nakitUcret =
     Number(
       gunSayisi * (yetiskinSayisi * yetiskinFiyat + cocukSayisi * cocukFiyat) -
-        kapora -
-        odenenNakit,
+        kapora,
     ) || 0;
-  const kartUcret = Number((nakitUcret * 1.1).toFixed(2) || 0);
+
+  const kartUcret = Number((nakitUcret * 1.1).toFixed(2));
 
   const kalanNakitUcret = Number(
     Math.max(0, nakitUcret - odenenNakit).toFixed(2),
   );
 
   const kalanKartUcret = Number(
-    Math.max(0, ((nakitUcret - odenenNakit) * 1.1).toFixed(2)),
+    Math.max(0, kartUcret - odenenNakit).toFixed(2),
   );
 
   const getDateRange = (start, end) => {
@@ -517,7 +517,7 @@ export default function ReservationForm() {
             </label>
             <input
               type="text"
-              value={`${nakitUcret} ₺`}
+              value={`${kalanNakitUcret} ₺`}
               readOnly
               className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
             />
@@ -529,7 +529,7 @@ export default function ReservationForm() {
             </label>
             <input
               type="text"
-              value={`${kartUcret} ₺`}
+              value={`${kalanKartUcret} ₺`}
               readOnly
               className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
             />
