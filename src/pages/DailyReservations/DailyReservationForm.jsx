@@ -178,7 +178,6 @@ export default function DailyReservationForm() {
               onChange={e => setForm({ ...form, tcNo: e.target.value })}
               disabled={isEdit && !canEditGeneral}
               className="input"
-              required
             />
           </div>
 
@@ -191,7 +190,6 @@ export default function DailyReservationForm() {
               onChange={e => setForm({ ...form, plaka: e.target.value })}
               disabled={isEdit && !canEditGeneral}
               className="input"
-              required
             />
           </div>
 
