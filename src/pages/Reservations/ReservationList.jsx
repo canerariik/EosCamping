@@ -259,6 +259,7 @@ export default function ReservationList() {
       { header: 'BÖLGE', key: 'bolge', width: 15 },
       { header: 'AÇIKLAMA', key: 'aciklama', width: 15 },
       { header: 'KAPORA', key: 'kapora', width: 15 },
+      { header: 'İNDİRİM', key: 'odenenhavale', width: 15 },
       { header: 'NAKİT TUTAR', key: 'nakit', width: 15 },
       { header: 'KART TUTAR', key: 'kart', width: 15 },
       { header: 'ÖDENEN GÜNCEL TUTAR', key: 'odenennakit', width: 15 },
@@ -301,6 +302,7 @@ export default function ReservationList() {
         bolge: res.kampBolge,
         aciklama: res.aciklama,
         kapora: res.kapora,
+        odenenhavale: res.odenenHavale,
         nakit: res.nakitUcret,
         kart: res.kartUcret,
         odenennakit: res.odenenNakit,
@@ -516,6 +518,7 @@ export default function ReservationList() {
                   'BÖLGE',
                   'AÇIKLAMA',
                   'KAPORA',
+                  'İNDİRİM',
                   'NAKİT',
                   'KART',
                   'KALAN NAKİT',
@@ -617,6 +620,10 @@ export default function ReservationList() {
 
                       <td className="p-6 text-center align-middle">
                         ₺{res.kapora}
+                      </td>
+
+                      <td className="p-6 text-center align-middle">
+                        ₺{res.odenenHavale}
                       </td>
 
                       <td className="p-6 text-center align-middle">

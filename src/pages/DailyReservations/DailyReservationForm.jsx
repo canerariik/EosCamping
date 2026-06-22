@@ -204,6 +204,7 @@ export default function DailyReservationForm() {
                 setForm({ ...form, yetiskinSayisi: e.target.value })
               }
               disabled={isEdit && !canEditPrice}
+              onWheel={e => e.target.blur()}
               className="input"
               required
             />
@@ -218,6 +219,7 @@ export default function DailyReservationForm() {
               value={form.cocukSayisi}
               onChange={e => setForm({ ...form, cocukSayisi: e.target.value })}
               disabled={isEdit && !canEditPrice}
+              onWheel={e => e.target.blur()}
               className="input"
               required
             />
