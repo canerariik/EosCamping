@@ -34,6 +34,11 @@ export default function Sidebar() {
     ...(!isPersonel && !isReception
       ? [
           {
+            to: '/fullReservations',
+            icon: UserCog,
+            label: 'Konaklamış Kişiler',
+          },
+          {
             to: '/accommodations',
             icon: Tent,
             label: 'Konaklama Birimleri',

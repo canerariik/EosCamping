@@ -22,6 +22,7 @@ import UserList from './pages/Users/UserList';
 import UserForm from './pages/Users/UserForm';
 import PersonelInfoList from './pages/PersonelInfo/PersonelInfoList';
 import PersonelInfoForm from './pages/PersonelInfo/PersonelInfoForm';
+import FullReservationList from './pages/FullReservationList';
 
 import Layout from './components/layout/Layout';
 import { ToastContainer } from 'react-toastify';
@@ -123,6 +124,8 @@ function App() {
           <Route path="/personels" element={<PersonelInfoList />} />
           <Route path="/personels/new" element={<PersonelInfoForm />} />
           <Route path="/personels/edit/:id" element={<PersonelInfoForm />} />
+
+          <Route path="/fullReservations" element={<FullReservationList />} />
         </Route>
 
         <Route

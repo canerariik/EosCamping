@@ -258,7 +258,6 @@ export default function DailyReservationList() {
               value={searchTerm}
               onChange={e => {
                 setSearchTerm(e.target.value);
-
                 setTabPages(prev => ({
                   ...prev,
                   [activeTab]: 1,
@@ -275,6 +274,7 @@ export default function DailyReservationList() {
         <Pagination
           currentPage={currentPage}
           totalItems={totalItems}
+          totalPages={totalPages}
           onPageChange={page =>
             setTabPages(prev => ({
               ...prev,
@@ -386,6 +386,7 @@ export default function DailyReservationList() {
         <Pagination
           currentPage={currentPage}
           totalItems={totalItems}
+          totalPages={totalPages}
           onPageChange={page =>
             setTabPages(prev => ({
               ...prev,
