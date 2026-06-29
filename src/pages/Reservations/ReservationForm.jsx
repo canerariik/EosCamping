@@ -127,7 +127,7 @@ export default function ReservationForm() {
   const kalanKartUcret =
     kalanNakitUcret === 0
       ? 0
-      : Number(Math.max(0, kartUcret - odenenNakit - odenenHavale).toFixed(2));
+      : Number(Math.max(kalanNakitUcret * 1.1).toFixed(2));
 
   const getDateRange = (start, end) => {
     const dates = [];

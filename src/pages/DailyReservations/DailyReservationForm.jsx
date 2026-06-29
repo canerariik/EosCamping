@@ -69,8 +69,14 @@ export default function DailyReservationForm() {
   const yetiskinFiyat = getSetting('gunu_Birlik_Yetiskin');
   const cocukFiyat = getSetting('gunu_Birlik_Cocuk');
 
+  const yapilanIndirim = Number(form.odenenHavale) || 0;
+
   const nakitUcret = Number(
-    (yetiskinSayisi * yetiskinFiyat + cocukSayisi * cocukFiyat).toFixed(2),
+    (
+      yetiskinSayisi * yetiskinFiyat +
+      cocukSayisi * cocukFiyat -
+      yapilanIndirim
+    ).toFixed(2),
   );
 
   const handleSubmit = async e => {
@@ -85,6 +91,7 @@ export default function DailyReservationForm() {
       yetiskinSayisi,
       cocukSayisi,
       gunSayisi: 1,
+      odenenHavale: yapilanIndirim,
       nakitUcret,
       kartUcret: nakitUcret,
       gunuBirlikMi: true,
@@ -235,6 +242,25 @@ export default function DailyReservationForm() {
               disabled={isEdit && !canEditGeneral}
               className="input"
               placeholder=""
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-slate-300 font-bold text-white">
+              İNDİRİM TUTARI
+            </label>
+            <input
+              type="number"
+              value={form.odenenHavale}
+              onChange={e =>
+                setForm(prev => ({
+                  ...prev,
+                  odenenHavale: e.target.value,
+                }))
+              }
+              disabled={isEdit && !canEditPrice}
+              onWheel={e => e.target.blur()}
+              className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
             />
           </div>
 

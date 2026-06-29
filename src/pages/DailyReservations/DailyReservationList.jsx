@@ -131,6 +131,7 @@ export default function DailyReservationList() {
       { header: 'GİRİŞ', key: 'giris', width: 15 },
       { header: 'ÇIKIŞ', key: 'cikis', width: 15 },
       { header: 'GÜN', key: 'gun', width: 10 },
+      { header: 'İNDİRİM', key: 'odenenhavale', width: 15 },
       { header: 'NAKİT', key: 'nakit', width: 15 },
       { header: 'KART', key: 'kart', width: 15 },
       { header: 'AÇIKLAMA', key: 'aciklama', width: 25 },
@@ -162,6 +163,7 @@ export default function DailyReservationList() {
         giris: format(new Date(res.girisTarihi), 'dd.MM.yyyy'),
         cikis: format(new Date(res.cikisTarihi), 'dd.MM.yyyy'),
         gun: res.gunSayisi,
+        odenenhavale: res.odenenhavale,
         nakit: res.nakitUcret,
         kart: res.kartUcret,
         aciklama: res.aciklama,
@@ -300,6 +302,7 @@ export default function DailyReservationList() {
                   'GİRİŞ',
                   'ÇIKIŞ',
                   'GÜN',
+                  'İNDİRİM',
                   'NAKİT',
                   'KART',
                   'AÇIKLAMA',
@@ -350,6 +353,7 @@ export default function DailyReservationList() {
                         {format(new Date(res.cikisTarihi), 'dd.MM.yyyy')}
                       </td>
                       <td className="p-6 text-center">{res.gunSayisi}</td>
+                      <td className="p-6 text-center">{res.odenenHavale}</td>
                       <td className="p-6 text-center">₺{res.nakitUcret}</td>
                       <td className="p-6 text-center">₺{res.kartUcret}</td>
                       <td className="p-6 text-center">{res.aciklama}</td>
