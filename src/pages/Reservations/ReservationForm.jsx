@@ -124,9 +124,10 @@ export default function ReservationForm() {
     Math.max(0, nakitUcret - odenenNakit - odenenHavale).toFixed(2),
   );
 
-  const kalanKartUcret = Number(
-    Math.max(0, kartUcret - odenenNakit - odenenHavale).toFixed(2),
-  );
+  const kalanKartUcret =
+    kalanNakitUcret === 0
+      ? 0
+      : Number(Math.max(0, kartUcret - odenenNakit - odenenHavale).toFixed(2));
 
   const getDateRange = (start, end) => {
     const dates = [];
@@ -421,7 +422,7 @@ export default function ReservationForm() {
                 }))
               }
               filterDate={date => !isDateFull(date)}
-              min={today}
+              // min={today}
               disabled={isEdit && !canEditPrice}
               required
               className="w-full px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
@@ -443,7 +444,7 @@ export default function ReservationForm() {
                 }))
               }
               filterDate={date => !isDateFull(date)}
-              min={form.girisTarihi || today}
+              // min={form.girisTarihi || today}
               disabled={isEdit && !canEditPrice}
               required
               className="w-full px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
