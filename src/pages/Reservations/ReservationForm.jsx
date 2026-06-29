@@ -121,7 +121,7 @@ export default function ReservationForm() {
   const kartUcret = Number((nakitUcret * 1.1).toFixed(2));
 
   const kalanNakitUcret = Number(
-    Math.max(0, nakitUcret - odenenNakit - odenenHavale).toFixed(2),
+    Math.max(0, nakitUcret - odenenNakit).toFixed(2),
   );
 
   const kalanKartUcret =

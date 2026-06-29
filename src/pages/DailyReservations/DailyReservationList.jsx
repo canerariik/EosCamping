@@ -131,7 +131,7 @@ export default function DailyReservationList() {
       { header: 'GİRİŞ', key: 'giris', width: 15 },
       { header: 'ÇIKIŞ', key: 'cikis', width: 15 },
       { header: 'GÜN', key: 'gun', width: 10 },
-      { header: 'İNDİRİM', key: 'odenenhavale', width: 15 },
+      { header: 'İNDİRİM', key: 'odenenHavale', width: 15 },
       { header: 'NAKİT', key: 'nakit', width: 15 },
       { header: 'KART', key: 'kart', width: 15 },
       { header: 'AÇIKLAMA', key: 'aciklama', width: 25 },
@@ -303,8 +303,8 @@ export default function DailyReservationList() {
                   'ÇIKIŞ',
                   'GÜN',
                   'İNDİRİM',
-                  'NAKİT',
-                  'KART',
+                  'NAKİT KALAN',
+                  'TOPLAM ÜCRET',
                   'AÇIKLAMA',
                 ].map((h, i) => (
                   <th key={i} className="p-6 text-center text-white">

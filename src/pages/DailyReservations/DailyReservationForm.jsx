@@ -79,6 +79,10 @@ export default function DailyReservationForm() {
     ).toFixed(2),
   );
 
+  const toplamUcret = Number(
+    (yetiskinSayisi * yetiskinFiyat + cocukSayisi * cocukFiyat).toFixed(2),
+  );
+
   const handleSubmit = async e => {
     e.preventDefault();
 
@@ -93,7 +97,7 @@ export default function DailyReservationForm() {
       gunSayisi: 1,
       odenenHavale: yapilanIndirim,
       nakitUcret,
-      kartUcret: nakitUcret,
+      kartUcret: toplamUcret,
       gunuBirlikMi: true,
       kayitTarihi: new Date(),
     };
