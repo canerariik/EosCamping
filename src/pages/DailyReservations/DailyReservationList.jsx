@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { useReservationStore } from '../../store/reservationStore';
 import { useAuthStore } from '../../store/authStore';
 import { format } from 'date-fns';
@@ -23,14 +23,52 @@ export default function DailyReservationList() {
 
   const [tabPages, setTabPages] = useState({
     aktif: 1,
-    cikisGunu: 1,
-    bekliyor: 1,
     tamamlandi: 1,
   });
+
+  const topScrollRef = useRef(null);
+  const bottomScrollRef = useRef(null);
+  const tableRef = useRef(null);
+  const [tableWidth, setTableWidth] = useState(0);
+  const syncingRef = useRef(false);
 
   useEffect(() => {
     init();
   }, []);
+
+  useLayoutEffect(() => {
+    const updateWidth = () => {
+      if (tableRef.current) {
+        setTableWidth(tableRef.current.scrollWidth);
+      }
+    };
+
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  });
+
+  const handleTopScroll = () => {
+    if (syncingRef.current) {
+      syncingRef.current = false;
+      return;
+    }
+    if (bottomScrollRef.current && topScrollRef.current) {
+      syncingRef.current = true;
+      bottomScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    }
+  };
+
+  const handleBottomScroll = () => {
+    if (syncingRef.current) {
+      syncingRef.current = false;
+      return;
+    }
+    if (topScrollRef.current && bottomScrollRef.current) {
+      syncingRef.current = true;
+      topScrollRef.current.scrollLeft = bottomScrollRef.current.scrollLeft;
+    }
+  };
 
   const getStatus = giris => {
     const today = new Date();
@@ -201,93 +239,101 @@ export default function DailyReservationList() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-4xl font-bold text-white">
-            Günlük Rezervasyonlar
-          </h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-4xl font-bold text-white">Günlük Rezervasyonlar</h1>
 
-          {(user?.role === 'admin' || user?.role === 'resepsiyon') && (
-            <Link
-              to="/dailyReservations/new"
-              className="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl flex items-center gap-3"
-            >
-              <Plus className="w-5 h-5" />
-              Günlük Rezervasyon
-            </Link>
-          )}
-        </div>
+        {(user?.role === 'admin' || user?.role === 'resepsiyon') && (
+          <Link
+            to="/dailyReservations/new"
+            className="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl flex items-center gap-3"
+          >
+            <Plus className="w-5 h-5" />
+            Günlük Rezervasyon
+          </Link>
+        )}
+      </div>
 
-        <div className="flex justify-between items-center gap-4 flex-wrap">
-          <div className="flex gap-3">
-            {[
-              { key: 'aktif', label: 'Aktif' },
-              { key: 'tamamlandi', label: 'Tamamlandı' },
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => {
-                  setActiveTab(tab.key);
-
-                  setTabPages(prev => ({
-                    ...prev,
-                    [tab.key]: 1,
-                  }));
-                }}
-                className={`px-4 py-2 rounded-lg ${
-                  activeTab === tab.key
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-700 text-slate-300'
-                }`}
-              >
-                {tab.label} ({counts[tab.key]})
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3">
+      <div className="flex flex-col lg:flex-row justify-between gap-4">
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { key: 'aktif', label: 'Aktif' },
+            { key: 'tamamlandi', label: 'Tamamlandı' },
+          ].map(tab => (
             <button
-              onClick={exportToExcel}
-              className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Excel İndir
-            </button>
+              key={tab.key}
+              onClick={() => {
+                setActiveTab(tab.key);
 
-            <input
-              type="text"
-              placeholder="Ara..."
-              value={searchTerm}
-              onChange={e => {
-                setSearchTerm(e.target.value);
                 setTabPages(prev => ({
                   ...prev,
-                  [activeTab]: 1,
+                  [tab.key]: 1,
                 }));
               }}
-              className="bg-slate-800 border border-slate-700 text-white px-4 py-2 rounded-lg w-[320px] focus:outline-none focus:border-emerald-500"
-            />
-          </div>
+              className={`px-4 py-2 rounded-lg ${
+                activeTab === tab.key
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-700 text-slate-300'
+              }`}
+            >
+              {tab.label} ({counts[tab.key]})
+            </button>
+          ))}
         </div>
 
-        <br />
-        <br />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={exportToExcel}
+            className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Excel İndir
+          </button>
 
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          totalPages={totalPages}
-          onPageChange={page =>
-            setTabPages(prev => ({
-              ...prev,
-              [activeTab]: page,
-            }))
-          }
-        />
+          <input
+            type="text"
+            placeholder="Ara..."
+            value={searchTerm}
+            onChange={e => {
+              setSearchTerm(e.target.value);
+              setTabPages(prev => ({
+                ...prev,
+                [activeTab]: 1,
+              }));
+            }}
+            className="bg-slate-800 border border-slate-700 text-white px-4 py-2 rounded-lg w-[320px] focus:outline-none focus:border-emerald-500"
+          />
+        </div>
+      </div>
 
-        <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-x-auto">
-          <table className="min-w-[1500px] w-full">
-            <thead className="bg-slate-800/50">
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        totalPages={totalPages}
+        onPageChange={page =>
+          setTabPages(prev => ({
+            ...prev,
+            [activeTab]: page,
+          }))
+        }
+      />
+
+      <div className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden">
+        <div
+          ref={topScrollRef}
+          onScroll={handleTopScroll}
+          data-testid="reservation-table-top-scroll"
+          className="overflow-x-auto"
+        >
+          <div style={{ width: tableWidth, height: 1 }} />
+        </div>
+
+        <div
+          ref={bottomScrollRef}
+          onScroll={handleBottomScroll}
+          className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-320px)]"
+        >
+          <table ref={tableRef} className="min-w-[1500px] w-full">
+            <thead className="bg-slate-800 sticky top-0 z-10">
               <tr>
                 {[
                   'Durum',
@@ -330,7 +376,10 @@ export default function DailyReservationList() {
                   const status = getDisplayStatus(res);
 
                   return (
-                    <tr key={res.id} className="border-t border-slate-800">
+                    <tr
+                      key={res.id}
+                      className="border-t border-slate-800 hover:bg-slate-800/30"
+                    >
                       <td className="p-6 text-center align-middle">
                         <span
                           className={`inline-flex items-center justify-center px-4 py-2 rounded-full text-sm whitespace-nowrap min-w-[120px] ${status.color}`}
@@ -386,58 +435,65 @@ export default function DailyReservationList() {
             </tbody>
           </table>
         </div>
+      </div>
 
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          totalPages={totalPages}
-          onPageChange={page =>
-            setTabPages(prev => ({
-              ...prev,
-              [activeTab]: page,
-            }))
-          }
-        />
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        totalPages={totalPages}
+        onPageChange={page =>
+          setTabPages(prev => ({
+            ...prev,
+            [activeTab]: page,
+          }))
+        }
+      />
 
-        {confirmDelete && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-8 shadow-2xl">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Günlük Rezervasyon Sil
-              </h2>
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-8 shadow-2xl">
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Günlük Rezervasyon Sil
+            </h2>
 
-              <p className="text-slate-300 leading-relaxed">
-                <span className="font-bold text-white">
-                  {confirmDelete.isim} {confirmDelete.soyisim}
-                </span>{' '}
-                isimli kullanıcıya ait günlük rezervasyonu silmek istediğinize
-                emin misiniz?
-              </p>
+            <p className="text-slate-300 leading-relaxed">
+              <span className="font-bold text-white">
+                {confirmDelete.isim} {confirmDelete.soyisim}
+              </span>{' '}
+              isimli kullanıcıya ait günlük rezervasyonu silmek istediğinize
+              emin misiniz?
+            </p>
 
-              <div className="flex gap-4 mt-8">
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className={
-                    'flex-1 py-4 rounded-xl font-bold transition bg-red-600 hover:bg-red-500'
-                  }
-                >
-                  {deleting ? 'Siliniyor...' : 'Evet, Sil'}
-                </button>
+            <div className="flex gap-4 mt-8">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className={
+                  'flex-1 py-4 rounded-xl font-bold transition bg-red-600 hover:bg-red-500'
+                }
+              >
+                {deleting ? 'Siliniyor...' : 'Evet, Sil'}
+              </button>
 
-                <button
-                  type="button"
-                  onClick={() => setConfirmDelete(null)}
-                  className="flex-1 py-4 rounded-xl bg-slate-700 hover:bg-slate-600 transition"
-                >
-                  Vazgeç
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 py-4 rounded-xl bg-slate-700 hover:bg-slate-600 transition"
+              >
+                Vazgeç
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+      <style>
+        {`
+          input[type='date']::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(2);
+          }
+        `}
+      </style>
     </div>
   );
 }
