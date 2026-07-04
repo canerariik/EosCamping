@@ -87,6 +87,9 @@ export default function ReservationList() {
       now.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }),
     );
 
+    const trNowDay = new Date(trNow);
+    trNowDay.setHours(0, 0, 0, 0);
+
     const inDate = new Date(giris);
     const outDate = new Date(cikis);
 
@@ -104,7 +107,7 @@ export default function ReservationList() {
       };
     }
 
-    if (trNow.getTime() === outDate.getTime()) {
+    if (trNowDay.getTime() === outDate.getTime()) {
       return {
         key: 'cikisGunu',
         text: 'Çıkış Günü',
@@ -112,7 +115,7 @@ export default function ReservationList() {
       };
     }
 
-    if (trNow >= inDate && trNow < outDate) {
+    if (trNowDay >= inDate && trNowDay < outDate) {
       return {
         key: 'aktif',
         text: 'Aktif',
