@@ -96,10 +96,10 @@ export default function ReservationList() {
     inDate.setHours(0, 0, 0, 0);
     outDate.setHours(0, 0, 0, 0);
 
-    const outDateAt13 = new Date(outDate);
-    outDateAt13.setHours(13, 0, 0, 0);
+    const outDateAt17 = new Date(outDate);
+    outDateAt17.setHours(17, 0, 0, 0);
 
-    if (trNow >= outDateAt13) {
+    if (trNow >= outDateAt17) {
       return {
         key: 'tamamlandi',
         text: 'Tamamlandı',
