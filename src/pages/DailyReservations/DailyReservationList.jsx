@@ -346,10 +346,8 @@ export default function DailyReservationList() {
                   'YETİŞKİN',
                   'ÇOCUK',
                   'GİRİŞ',
-                  'ÇIKIŞ',
-                  'GÜN',
                   'İNDİRİM',
-                  'NAKİT KALAN',
+                  'KALAN ÜCRET',
                   'TOPLAM ÜCRET',
                   'AÇIKLAMA',
                 ].map((h, i) => (
@@ -398,10 +396,6 @@ export default function DailyReservationList() {
                       <td className="p-6 text-center">
                         {format(new Date(res.girisTarihi), 'dd.MM.yyyy')}
                       </td>
-                      <td className="p-6 text-center">
-                        {format(new Date(res.cikisTarihi), 'dd.MM.yyyy')}
-                      </td>
-                      <td className="p-6 text-center">{res.gunSayisi}</td>
                       <td className="p-6 text-center">{res.odenenHavale}</td>
                       <td className="p-6 text-center">₺{res.nakitUcret}</td>
                       <td className="p-6 text-center">₺{res.kartUcret}</td>

@@ -52,7 +52,7 @@ export default function DailyReservationForm() {
         cocukSayisi: existing.cocukSayisi ?? '',
         cadirSayisi: existing.cadirSayisi ?? '',
         girisTarihi: existing.girisTarihi ?? today,
-        cikisTarihi: existing.cikisTarihi ?? today,
+        odenenHavale: existing.odenenHavale ?? '',
         aciklama: existing.aciklama ?? '',
       });
     } else {
@@ -254,7 +254,7 @@ export default function DailyReservationForm() {
               İNDİRİM TUTARI
             </label>
             <input
-              type="number"
+              type="text"
               value={form.odenenHavale}
               onChange={e =>
                 setForm(prev => ({
@@ -264,7 +264,19 @@ export default function DailyReservationForm() {
               }
               disabled={isEdit && !canEditPrice}
               onWheel={e => e.target.blur()}
-              className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-emerald-500 focus:outline-none"
+              className="input"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-slate-300 font-bold text-white">
+              KALAN TOPLAM ÜCRET
+            </label>
+            <input
+              type="text"
+              value={`${nakitUcret} ₺`}
+              readOnly
+              className="input"
             />
           </div>
 
@@ -274,7 +286,7 @@ export default function DailyReservationForm() {
             </label>
             <input
               type="text"
-              value={`${nakitUcret} ₺`}
+              value={`${toplamUcret} ₺`}
               readOnly
               className="input"
             />
