@@ -377,6 +377,20 @@ export default function ReservationList() {
     }));
   };
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const activeReservations = reservations.filter(r => {
+    const giris = r.girisTarihi;
+    const cikis = r.cikisTarihi;
+
+    return r.gunuBirlikMi !== true && todayStr >= giris && todayStr <= cikis;
+  });
+
+  const totalTentCount = activeReservations.reduce(
+    (sum, r) => sum + Number(r.cadirSayisi || 0),
+    0,
+  );
+
   if (loading)
     return <div className="text-white text-center">Yükleniyor...</div>;
 
@@ -514,7 +528,7 @@ export default function ReservationList() {
                   'PLAKA',
                   'YETİŞKİN',
                   'ÇOCUK',
-                  'ÇADIR',
+                  'ÇADIR (' + totalTentCount + ')',
                   'GİRİŞ',
                   'ÇIKIŞ',
                   'GÜN',
