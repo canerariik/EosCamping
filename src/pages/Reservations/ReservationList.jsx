@@ -137,7 +137,7 @@ export default function ReservationList() {
         const status = getStatus(r.girisTarihi, r.cikisTarihi);
 
         if (activeTab === 'aktif') {
-          return status.key === 'aktif' || status.key === 'cikisGunu';
+          return status.key === 'aktif';
         }
 
         return status.key === activeTab;
@@ -217,7 +217,7 @@ export default function ReservationList() {
       aktif: reservations.filter(r => {
         if (r.gunuBirlikMi !== false) return false;
         const status = getStatus(r.girisTarihi, r.cikisTarihi).key;
-        return status === 'aktif' || status === 'cikisGunu';
+        return status === 'aktif';
       }).length,
 
       cikisGunu: reservations.filter(
@@ -377,19 +377,12 @@ export default function ReservationList() {
     }));
   };
 
-  const todayStr = new Date().toISOString().split('T')[0];
-
-  const activeReservations = reservations.filter(r => {
-    const giris = r.girisTarihi;
-    const cikis = r.cikisTarihi;
-
-    return r.gunuBirlikMi !== true && todayStr >= giris && todayStr <= cikis;
-  });
-
-  const totalTentCount = activeReservations.reduce(
-    (sum, r) => sum + Number(r.cadirSayisi || 0),
-    0,
-  );
+  const totalTentCount = useMemo(() => {
+    return filteredReservations.reduce(
+      (sum, r) => sum + Number(r.cadirSayisi || 0),
+      0,
+    );
+  }, [filteredReservations]);
 
   if (loading)
     return <div className="text-white text-center">Yükleniyor...</div>;
